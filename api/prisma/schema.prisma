@@ -1,0 +1,297 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Auth {
+  id       String   @id @default(uuid())
+  email    String   @unique
+  password String
+  userId   String?
+  role     UserRole
+
+  @@map("Auth")
+}
+
+model UserVerfication {
+  id     String @id @default(uuid())
+  userId String
+  uniqueString String?
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ForgotPassword {
+  id     String @id @default(uuid())
+  userId String
+  uniqueString String?
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("forgot-password")
+}
+
+model Customer {
+  id           String         @id @default(uuid())
+  firstName    String
+  lastName     String
+  dateOfBirth  DateTime?
+  customerGroup   String?
+  mobile       String?
+  city         String?
+  state        String?
+  zipCode      String?
+  gender       String?
+  country      String?
+  email        String         @unique
+  address      String?
+  img          String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  appointments Appointments[]
+  Reviews      Reviews[]
+  Prescription Prescription[]
+  favourites   Favourites[]
+
+  @@map("Customer")
+}
+
+model Gardener {
+  id                     String           @id @default(uuid())
+  firstName              String
+  lastName               String
+  email                  String           @unique
+  address                String?
+  img                    String?
+  phone                  String?
+  gender                 Gender?
+  dob                    String?
+  biography              String?
+  officeName             String?
+  officeAddress          String?
+  officeImages           String?
+  city                   String?
+  state                  String?
+  country                String?
+  postalCode             String?
+  price                  String?
+  services               String?
+  specialization         String?
+  degree                 String?
+  college                String?
+  completionYear         String?
+  experience             String?
+  designation            String?
+  award                  String?
+  awardYear              String?
+  registration           String?
+  year                   String?
+  experienceOrgName String?
+  expericenceStart       String?
+  expericenceEnd         String?
+  verified               Boolean?         @default(false)
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  appointments           Appointments[]
+  prescription           Prescription[]
+  favourites             Favourites[]
+  GardenerTimeSlot         GardenerTimeSlot[]
+  blogs                  Blogs[]
+  reviews                Reviews[]
+
+  @@map("Gardener")
+}
+
+model Appointments {
+  id        String   @id @default(uuid())
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  gardenerId  String?
+  gardener    Gardener?  @relation(fields: [gardenerId], references: [id])
+
+  trackingId         String?             @unique
+  firstName          String?
+  lastName           String?
+  email              String?
+  phone              String?
+  address            String?
+  description        String?
+  scheduleDate       String?
+  scheduleTime       String?
+  reasonForVisit     String?
+  status             String?             @default("pending")
+  paymentStatus      paymentStatus?      @default(unpaid)
+  prescriptionStatus prescriptionStatus? @default(notIssued)
+  isFollowUp         Boolean?            @default(false)
+  patientType        String?
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  prescription Prescription[]
+  payment      Payment[]
+
+  @@map("Appointments")
+}
+
+model Payment {
+  id            String       @id @default(uuid())
+  appointmentId String
+  appointment   Appointments @relation(fields: [appointmentId], references: [id])
+  paymentMethod String
+  paymentType   String
+
+  GardenerFee   Int
+  bookingFee  Int
+  vat         Int?
+  totalAmount Int
+
+  @@map("Payment")
+}
+
+model Reviews {
+  id String @id @default(uuid())
+
+  gardenerId String
+  gardener   Gardener? @relation(fields: [gardenerId], references: [id])
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  description   String?
+  star          String?
+  isRecommended Boolean?
+  response      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("Reviews")
+}
+
+model Prescription {
+  id String @id @default(uuid())
+
+  gardenerId String
+  gardener   Gardener @relation(fields: [gardenerId], references: [id])
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  appointmentId String
+  appointment   Appointments @relation(fields: [appointmentId], references: [id])
+
+  followUpdate String?
+  instruction  String?
+  isFullfilled Boolean @default(false)
+  isArchived   Boolean @default(false)
+  daignosis    String?
+
+  disease String
+  test    String?
+
+  medicines Medicine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("Prescription")
+}
+
+model Medicine {
+  id             String       @id @default(uuid())
+  prescriptionId String
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id])
+
+  medicine  String?
+  dosage    String?
+  frequency String?
+  duration  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("Medicine")
+}
+
+model Favourites {
+  id        String   @id @default(uuid())
+  gardenerId  String   @unique
+  gardener    Gardener   @relation(fields: [gardenerId], references: [id])
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  customerId String?
+
+  @@map("Favourites")
+}
+
+model GardenerTimeSlot {
+  id String @id @default(uuid())
+
+  gardenerId       String
+  gardener         Gardener        @relation(fields: [gardenerId], references: [id])
+  day            Day?
+  timeSlot       ScheduleDay[]
+  weekDay        String?
+  maximumPatient Int?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("GardenerTimeSlot")
+}
+
+model ScheduleDay {
+  id               Int             @id @default(autoincrement())
+  startTime        String
+  endTime          String
+  gardenerTimeSlot   GardenerTimeSlot? @relation(fields: [gardenerTimeSlotId], references: [id])
+  gardenerTimeSlotId String?
+}
+
+model Blogs {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  img         String?
+  userId      String
+  user        Gardener   @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum UserRole {
+  admin
+  customer
+  gardener
+}
+
+enum Day {
+  saturday
+  sunday
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum prescriptionStatus {
+  issued
+  notIssued
+}
+
+enum paymentStatus {
+  paid
+  unpaid
+}
